@@ -7,6 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let monitor = ClipboardMonitor()
     private var globalShortcutMonitor: Any?
     private var localEventMonitor: Any?
+    private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
     private var selectedIndex: Int = 0
     private var selectedIndexBinding = SelectedIndexModel()
@@ -94,6 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         popupWindow = window
         setupLocalEventMonitor(store: store)
+        setupGlobalClickMonitor()
     }
 
     private func closePopup() {
@@ -103,8 +105,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(m)
             localEventMonitor = nil
         }
+        if let m = globalClickMonitor {
+            NSEvent.removeMonitor(m)
+            globalClickMonitor = nil
+        }
         previousApp?.activate(options: .activateIgnoringOtherApps)
         previousApp = nil
+    }
+
+    private func setupGlobalClickMonitor() {
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            DispatchQueue.main.async { self?.closePopup() }
+        }
     }
 
     private func setupLocalEventMonitor(store: ClipboardStore) {
