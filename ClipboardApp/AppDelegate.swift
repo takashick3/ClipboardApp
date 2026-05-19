@@ -1,11 +1,12 @@
 import AppKit
 import SwiftUI
+import CoreGraphics
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popupWindow: NSWindow?
     private let monitor = ClipboardMonitor()
-    private var globalShortcutMonitor: Any?
+    private var eventTap: CFMachPort?
     private var localEventMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
@@ -17,12 +18,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AccessibilityChecker.requestAccessibilityIfNeeded()
         setupStatusItem()
         monitor.start()
-        setupGlobalShortcut()
+        setupEventTap()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         monitor.stop()
-        if let m = globalShortcutMonitor { NSEvent.removeMonitor(m) }
+        tearDownEventTap()
         if let m = localEventMonitor { NSEvent.removeMonitor(m) }
     }
 
@@ -45,14 +46,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Global Shortcut (⌘+Shift+V)
+    // MARK: - CGEventTap (⌘+Shift+V を消費してトグル)
 
-    private func setupGlobalShortcut() {
-        globalShortcutMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 9 {
-                DispatchQueue.main.async { self?.togglePopup() }
-            }
+    private func setupEventTap() {
+        let mask: CGEventMask = 1 << CGEventType.keyDown.rawValue
+        guard let tap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: mask,
+            callback: { _, _, event, refcon in
+                let delegate = Unmanaged<AppDelegate>.fromOpaque(refcon!).takeUnretainedValue()
+                return delegate.handleCGEvent(event)
+            },
+            userInfo: Unmanaged.passUnretained(self).toOpaque()
+        ) else { return }
+
+        eventTap = tap
+        let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+    }
+
+    private func tearDownEventTap() {
+        guard let tap = eventTap else { return }
+        CGEvent.tapEnable(tap: tap, enable: false)
+        eventTap = nil
+    }
+
+    private func handleCGEvent(_ event: CGEvent) -> Unmanaged<CGEvent>? {
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let flags = event.flags
+        let isCmd   = flags.contains(.maskCommand)
+        let isShift = flags.contains(.maskShift)
+        let isV     = keyCode == 9
+
+        // ⌘+Shift+V: 消費してポップアップトグル
+        if isCmd && isShift && isV {
+            DispatchQueue.main.async { self.togglePopup() }
+            return nil
         }
+        return Unmanaged.passRetained(event)
     }
 
     // MARK: - Popup
