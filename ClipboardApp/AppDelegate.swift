@@ -33,7 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button {
-            let icon = NSImage(named: "menubar_iconTemplate")
+            let icon = NSImage(systemSymbolName: "list.bullet.clipboard", accessibilityDescription: "ClipboardApp")
             icon?.isTemplate = true
             button.image = icon
             button.action = #selector(togglePopup)
