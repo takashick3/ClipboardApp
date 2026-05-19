@@ -48,9 +48,6 @@ struct SnippetSettingsTab: View {
                                 .textFieldStyle(.plain)
                         } else {
                             Text(folder.title)
-                                .simultaneousGesture(TapGesture(count: 2).onEnded {
-                                    beginFolderEdit(folder)
-                                })
                         }
                     }
                     .tag(folder.id)
@@ -83,6 +80,14 @@ struct SnippetSettingsTab: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(selectedFolderID == nil)
+                Button {
+                    if let folder = selectedFolder { beginFolderEdit(folder) }
+                } label: {
+                    Image(systemName: "pencil")
+                        .frame(width: 28, height: 24)
+                }
+                .buttonStyle(.plain)
+                .disabled(selectedFolderID == nil || editingFolderID != nil)
                 Spacer()
             }
             .padding(.horizontal, 4)
