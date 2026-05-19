@@ -31,7 +31,7 @@ struct PopupView: View {
         HStack {
             Image(systemName: "doc.on.clipboard")
                 .foregroundColor(.accentColor)
-            Text("クリップボード履歴")
+            Text("ClipboardApp Ver1.0.0")
                 .font(.headline)
             Spacer()
             Text("\(displayItems.count)件")
