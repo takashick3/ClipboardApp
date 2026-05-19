@@ -5,6 +5,7 @@ struct SnippetSettingsTab: View {
     @State private var selectedFolderID: UUID? = nil
     @State private var editingFolderID: UUID? = nil
     @State private var editingFolderTitle: String = ""
+    @FocusState private var folderFieldFocused: Bool
     @State private var editingSnippetID: UUID? = nil
     @State private var editingSnippetTitle: String = ""
     @State private var editingSnippetContent: String = ""
@@ -46,6 +47,7 @@ struct SnippetSettingsTab: View {
                         if editingFolderID == folder.id {
                             TextField("フォルダ名", text: $editingFolderTitle, onCommit: commitFolderEdit)
                                 .textFieldStyle(.plain)
+                                .focused($folderFieldFocused)
                         } else {
                             Text(folder.title)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -193,6 +195,9 @@ struct SnippetSettingsTab: View {
     private func beginFolderEdit(_ folder: SnippetFolder) {
         editingFolderID = folder.id
         editingFolderTitle = folder.title
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            folderFieldFocused = true
+        }
     }
 
     private func commitFolderEdit() {
