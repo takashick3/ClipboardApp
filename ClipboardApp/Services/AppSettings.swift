@@ -10,7 +10,6 @@ class AppSettings: ObservableObject {
     @Published var maxHistoryCount: Int {
         didSet {
             UserDefaults.standard.set(maxHistoryCount, forKey: maxHistoryCountKey)
-            ClipboardStore.shared.applyMaxCount(maxHistoryCount)
         }
     }
 
