@@ -11,8 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var localEventMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
-    private var selectedIndex: Int = 0
-    private var selectedIndexBinding = SelectedIndexModel()
+    private var popupState = PopupStateModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -45,11 +44,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if popupWindow?.isVisible == true {
             closePopup()
         } else {
-            showPopup()
+            showPopup(tab: .history)
         }
     }
 
-    // MARK: - CGEventTap (⌘+Shift+V を消費してトグル)
+    // MARK: - CGEventTap (⌘+Shift+V / ⌘+Shift+B を消費してトグル)
 
     private func setupEventTap() {
         let mask: CGEventMask = 1 << CGEventType.keyDown.rawValue
@@ -82,27 +81,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let flags = event.flags
         let isCmd   = flags.contains(.maskCommand)
         let isShift = flags.contains(.maskShift)
-        let isV     = keyCode == 9
 
-        // ⌘+Shift+V: 消費してポップアップトグル
-        if isCmd && isShift && isV {
-            DispatchQueue.main.async { self.togglePopup() }
-            return nil
+        if isCmd && isShift {
+            if keyCode == 9 { // V
+                DispatchQueue.main.async { self.handleShortcut(tab: .history) }
+                return nil
+            }
+            if keyCode == 11 { // B
+                DispatchQueue.main.async { self.handleShortcut(tab: .snippets) }
+                return nil
+            }
         }
         return Unmanaged.passRetained(event)
     }
 
+    private func handleShortcut(tab: PopupTab) {
+        if popupWindow?.isVisible == true {
+            if popupState.activeTab == tab {
+                closePopup()
+            } else {
+                popupState.activeTab = tab
+                popupState.selectedIndex = 0
+                popupState.selectedSnippetFolder = nil
+            }
+        } else {
+            showPopup(tab: tab)
+        }
+    }
+
     // MARK: - Popup
 
-    private func showPopup() {
+    private func showPopup(tab: PopupTab) {
         previousApp = NSWorkspace.shared.frontmostApplication
-        selectedIndexBinding.value = 0
+        popupState.activeTab = tab
+        popupState.selectedIndex = 0
+        popupState.selectedSnippetFolder = nil
 
-        let store = ClipboardStore.shared
+        let clipboardStore = ClipboardStore.shared
+        let snippetStore = SnippetStore.shared
         let popupView = PopupView(
-            store: store,
-            selectionModel: selectedIndexBinding,
+            clipboardStore: clipboardStore,
+            snippetStore: snippetStore,
+            state: popupState,
             onSelect: { [weak self] item in self?.pasteItem(item) },
+            onSelectSnippet: { [weak self] text in self?.pasteSnippet(text) },
             onClose: { [weak self] in self?.closePopup() },
             onOpenSettings: { [weak self] in
                 self?.closePopup()
@@ -132,7 +154,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         popupWindow = window
-        setupLocalEventMonitor(store: store)
+        setupLocalEventMonitor(clipboardStore: clipboardStore, snippetStore: snippetStore)
         setupGlobalClickMonitor()
     }
 
@@ -157,7 +179,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func setupLocalEventMonitor(store: ClipboardStore) {
+    private func setupLocalEventMonitor(clipboardStore: ClipboardStore, snippetStore: SnippetStore) {
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self = self else { return event }
 
@@ -168,33 +190,71 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return event
             }
 
-            // Keyboard handling
-            let displayItems = Array(store.items.prefix(AppSettings.shared.maxHistoryCount))
             switch event.keyCode {
             case 53: // Escape
-                self.closePopup()
+                if self.popupState.activeTab == .snippets && self.popupState.selectedSnippetFolder != nil {
+                    self.popupState.selectedSnippetFolder = nil
+                    self.popupState.selectedIndex = 0
+                } else {
+                    self.closePopup()
+                }
                 return nil
             case 125: // Down arrow
-                if self.selectedIndexBinding.value < displayItems.count - 1 {
-                    self.selectedIndexBinding.value += 1
-                }
+                self.moveSelectionDown(clipboardStore: clipboardStore, snippetStore: snippetStore)
                 return nil
             case 126: // Up arrow
-                if self.selectedIndexBinding.value > 0 {
-                    self.selectedIndexBinding.value -= 1
-                }
+                self.moveSelectionUp(snippetStore: snippetStore)
                 return nil
             case 36, 76: // Return / Enter
-                guard !displayItems.isEmpty else { return nil }
-                self.pasteItem(displayItems[self.selectedIndexBinding.value])
+                self.handleEnter(clipboardStore: clipboardStore, snippetStore: snippetStore)
                 return nil
             default:
-                // ⌘付きキーはすべて消費してポップアップ外への流出を防ぐ
                 if event.modifierFlags.contains(.command) {
                     return nil
                 }
                 return event
             }
+        }
+    }
+
+    private func moveSelectionDown(clipboardStore: ClipboardStore, snippetStore: SnippetStore) {
+        let maxIndex: Int
+        if popupState.activeTab == .history {
+            maxIndex = Array(clipboardStore.items.prefix(AppSettings.shared.maxHistoryCount)).count - 1
+        } else if let folder = popupState.selectedSnippetFolder {
+            maxIndex = folder.snippets.count - 1
+        } else {
+            maxIndex = snippetStore.folders.count - 1
+        }
+        if popupState.selectedIndex < maxIndex {
+            popupState.selectedIndex += 1
+        }
+    }
+
+    private func moveSelectionUp(snippetStore: SnippetStore) {
+        let minIndex: Int = (popupState.activeTab == .snippets && popupState.selectedSnippetFolder != nil) ? -1 : 0
+        if popupState.selectedIndex > minIndex {
+            popupState.selectedIndex -= 1
+        }
+    }
+
+    private func handleEnter(clipboardStore: ClipboardStore, snippetStore: SnippetStore) {
+        if popupState.activeTab == .history {
+            let displayItems = Array(clipboardStore.items.prefix(AppSettings.shared.maxHistoryCount))
+            guard !displayItems.isEmpty else { return }
+            pasteItem(displayItems[popupState.selectedIndex])
+        } else if let folder = popupState.selectedSnippetFolder {
+            if popupState.selectedIndex == -1 {
+                // Back
+                popupState.selectedSnippetFolder = nil
+                popupState.selectedIndex = snippetStore.folders.firstIndex(where: { $0.id == folder.id }) ?? 0
+            } else if popupState.selectedIndex < folder.snippets.count {
+                pasteSnippet(folder.snippets[popupState.selectedIndex].content)
+            }
+        } else {
+            guard !snippetStore.folders.isEmpty else { return }
+            popupState.selectedSnippetFolder = snippetStore.folders[popupState.selectedIndex]
+            popupState.selectedIndex = 0
         }
     }
 
@@ -217,6 +277,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         closePopup()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             PasteService.shared.paste(text: item.text, monitor: self.monitor)
+        }
+    }
+
+    private func pasteSnippet(_ text: String) {
+        closePopup()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            PasteService.shared.paste(text: text, monitor: self.monitor)
         }
     }
 
@@ -243,8 +310,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 // MARK: - Helpers
 
-class SelectedIndexModel: ObservableObject {
-    @Published var value: Int = 0
+class PopupStateModel: ObservableObject {
+    @Published var activeTab: PopupTab = .history
+    @Published var selectedIndex: Int = 0
+    @Published var selectedSnippetFolder: SnippetFolder? = nil
 }
 
 class PopupPanel: NSPanel {
