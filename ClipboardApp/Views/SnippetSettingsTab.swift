@@ -42,16 +42,18 @@ struct SnippetSettingsTab: View {
         VStack(spacing: 0) {
             List(selection: $selectedFolderID) {
                 ForEach(store.folders) { folder in
-                    if editingFolderID == folder.id {
-                        TextField("フォルダ名", text: $editingFolderTitle, onCommit: commitFolderEdit)
-                            .textFieldStyle(.plain)
-                    } else {
-                        Text(folder.title)
-                            .tag(folder.id)
-                            .onTapGesture(count: 2) {
-                                beginFolderEdit(folder)
-                            }
+                    Group {
+                        if editingFolderID == folder.id {
+                            TextField("フォルダ名", text: $editingFolderTitle, onCommit: commitFolderEdit)
+                                .textFieldStyle(.plain)
+                        } else {
+                            Text(folder.title)
+                                .simultaneousGesture(TapGesture(count: 2).onEnded {
+                                    beginFolderEdit(folder)
+                                })
+                        }
                     }
+                    .tag(folder.id)
                 }
                 .onMove { indices, destination in
                     store.moveFolder(from: indices, to: destination)
