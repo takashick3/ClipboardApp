@@ -6,6 +6,7 @@ struct SnippetSettingsTab: View {
     @State private var editingFolderID: UUID? = nil
     @State private var editingFolderTitle: String = ""
     @FocusState private var folderFieldFocused: Bool
+    @State private var selectedSnippetID: UUID? = nil
     @State private var editingSnippetID: UUID? = nil
     @State private var editingSnippetTitle: String = ""
     @State private var editingSnippetContent: String = ""
@@ -34,6 +35,9 @@ struct SnippetSettingsTab: View {
                     .frame(minWidth: 200, maxWidth: .infinity)
             }
             .frame(maxHeight: .infinity)
+            .onChange(of: selectedFolderID) { _ in
+                selectedSnippetID = nil
+            }
         }
     }
 
@@ -127,9 +131,18 @@ struct SnippetSettingsTab: View {
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
-                    .onTapGesture(count: 2) {
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedSnippetID = snippet.id }
+                    .simultaneousGesture(TapGesture(count: 2).onEnded {
+                        selectedSnippetID = snippet.id
                         beginSnippetEdit(snippet)
-                    }
+                    })
+                    .listRowBackground(
+                        selectedSnippetID == snippet.id
+                            ? Color.accentColor.opacity(0.2)
+                            : Color.clear
+                    )
                 }
                 .onMove { indices, destination in
                     store.moveSnippet(inFolder: folder.id, from: indices, to: destination)
@@ -143,6 +156,7 @@ struct SnippetSettingsTab: View {
                     let s = Snippet()
                     store.addSnippet(s, toFolder: folder.id)
                     if let added = store.folders.first(where: { $0.id == folder.id })?.snippets.last {
+                        selectedSnippetID = added.id
                         beginSnippetEdit(added)
                     }
                 } label: {
@@ -150,6 +164,17 @@ struct SnippetSettingsTab: View {
                         .frame(width: 28, height: 24)
                 }
                 .buttonStyle(.plain)
+                Button {
+                    if let id = selectedSnippetID {
+                        store.deleteSnippet(id: id, fromFolder: folder.id)
+                        selectedSnippetID = nil
+                    }
+                } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 28, height: 24)
+                }
+                .buttonStyle(.plain)
+                .disabled(selectedSnippetID == nil)
                 Spacer()
             }
             .padding(.horizontal, 4)
