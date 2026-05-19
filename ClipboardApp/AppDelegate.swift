@@ -151,6 +151,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.pasteItem(store.items[self.selectedIndexBinding.value])
                 return nil
             default:
+                // ⌘付きキーはすべて消費してポップアップ外への流出を防ぐ
+                if event.modifierFlags.contains(.command) {
+                    return nil
+                }
                 return event
             }
         }
