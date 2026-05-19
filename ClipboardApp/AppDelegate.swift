@@ -5,6 +5,7 @@ import CoreGraphics
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popupWindow: NSWindow?
+    private var settingsWindow: NSWindow?
     private let monitor = ClipboardMonitor()
     private var eventTap: CFMachPort?
     private var localEventMonitor: Any?
@@ -100,7 +101,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             store: store,
             selectionModel: selectedIndexBinding,
             onSelect: { [weak self] item in self?.pasteItem(item) },
-            onClose: { [weak self] in self?.closePopup() }
+            onClose: { [weak self] in self?.closePopup() },
+            onOpenSettings: { [weak self] in
+                self?.closePopup()
+                self?.openSettings()
+            }
         )
 
         let hosting = NSHostingController(rootView: popupView)
@@ -211,6 +216,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             PasteService.shared.paste(text: item.text, monitor: self.monitor)
         }
+    }
+
+    // MARK: - Settings Window
+
+    func openSettings() {
+        if let existing = settingsWindow, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let hosting = NSHostingController(rootView: SettingsView())
+        let window = NSWindow(contentViewController: hosting)
+        window.title = "設定"
+        window.styleMask = NSWindow.StyleMask([.titled, .closable])
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow = window
     }
 }
 
