@@ -40,7 +40,7 @@ struct SnippetSettingsTab: View {
 
     private var folderPane: some View {
         VStack(spacing: 0) {
-            List(selection: $selectedFolderID) {
+            List {
                 ForEach(store.folders) { folder in
                     Group {
                         if editingFolderID == folder.id {
@@ -48,9 +48,16 @@ struct SnippetSettingsTab: View {
                                 .textFieldStyle(.plain)
                         } else {
                             Text(folder.title)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .tag(folder.id)
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedFolderID = folder.id }
+                    .listRowBackground(
+                        selectedFolderID == folder.id
+                            ? Color.accentColor.opacity(0.2)
+                            : Color.clear
+                    )
                 }
                 .onMove { indices, destination in
                     store.moveFolder(from: indices, to: destination)
