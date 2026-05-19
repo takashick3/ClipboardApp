@@ -6,11 +6,22 @@ class ClipboardStore: ObservableObject {
 
     @Published private(set) var items: [ClipboardItem] = []
 
-    private let maxCount = 30
+    private var maxCount: Int = 30
     private let userDefaultsKey = "clipboard_history"
 
     private init() {
         load()
+        // AppSettings は ClipboardStore より後に初期化されるため didSet 経由ではなく直接反映
+        let saved = UserDefaults.standard.integer(forKey: "max_history_count")
+        if saved > 0 { maxCount = saved }
+    }
+
+    func applyMaxCount(_ count: Int) {
+        maxCount = count
+        if items.count > count {
+            items = Array(items.prefix(count))
+            save()
+        }
     }
 
     func add(_ text: String) {

@@ -3,22 +3,51 @@ import SwiftUI
 struct SettingsView: View {
     var body: some View {
         TabView {
+            GeneralTab()
+                .tabItem {
+                    Label("一般", systemImage: "gearshape")
+                }
             CreditsTab()
                 .tabItem {
                     Label("クレジット", systemImage: "info.circle")
                 }
         }
-        .frame(width: 400, height: 300)
+        .frame(width: 400, height: 260)
         .padding()
     }
 }
+
+// MARK: - 一般タブ
+
+private struct GeneralTab: View {
+    @ObservedObject private var settings = AppSettings.shared
+
+    var body: some View {
+        Form {
+            Picker("保存する履歴数", selection: $settings.maxHistoryCount) {
+                ForEach(AppSettings.historyOptions, id: \.self) { count in
+                    Text("\(count)件").tag(count)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: 280)
+
+            Toggle("ログイン時に自動起動", isOn: Binding(
+                get: { settings.launchAtLogin },
+                set: { settings.setLaunchAtLogin($0) }
+            ))
+        }
+        .padding(.vertical, 12)
+    }
+}
+
+// MARK: - クレジットタブ
 
 private struct CreditsTab: View {
     var body: some View {
         VStack(spacing: 16) {
             Spacer()
 
-            // アプリアイコン（実アイコン追加までプレースホルダー）
             Group {
                 if let icon = NSImage(named: "AppIcon") {
                     Image(nsImage: icon)
