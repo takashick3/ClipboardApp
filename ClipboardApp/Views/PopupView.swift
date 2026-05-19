@@ -29,7 +29,7 @@ struct PopupView: View {
 
     private var header: some View {
         HStack {
-            Image(systemName: "doc.on.clipboard")
+            Image(systemName: "list.bullet.clipboard")
                 .foregroundColor(.accentColor)
             Text("ClipboardApp Ver1.0.0")
                 .font(.headline)
