@@ -169,13 +169,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             // Keyboard handling
+            let displayItems = Array(store.items.prefix(AppSettings.shared.maxHistoryCount))
             switch event.keyCode {
             case 53: // Escape
                 self.closePopup()
                 return nil
             case 125: // Down arrow
-                let max = store.items.count - 1
-                if self.selectedIndexBinding.value < max {
+                if self.selectedIndexBinding.value < displayItems.count - 1 {
                     self.selectedIndexBinding.value += 1
                 }
                 return nil
@@ -185,8 +185,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return nil
             case 36, 76: // Return / Enter
-                guard !store.items.isEmpty else { return nil }
-                self.pasteItem(store.items[self.selectedIndexBinding.value])
+                guard !displayItems.isEmpty else { return nil }
+                self.pasteItem(displayItems[self.selectedIndexBinding.value])
                 return nil
             default:
                 // ⌘付きキーはすべて消費してポップアップ外への流出を防ぐ

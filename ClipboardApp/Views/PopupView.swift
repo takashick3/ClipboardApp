@@ -3,9 +3,14 @@ import SwiftUI
 struct PopupView: View {
     @ObservedObject var store: ClipboardStore
     @ObservedObject var selectionModel: SelectedIndexModel
+    @ObservedObject private var settings = AppSettings.shared
     var onSelect: (ClipboardItem) -> Void
     var onClose: () -> Void
     var onOpenSettings: () -> Void
+
+    private var displayItems: [ClipboardItem] {
+        Array(store.items.prefix(settings.maxHistoryCount))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,7 +34,7 @@ struct PopupView: View {
             Text("クリップボード履歴")
                 .font(.headline)
             Spacer()
-            Text("\(store.items.count)件")
+            Text("\(displayItems.count)件")
                 .font(.caption)
                 .foregroundColor(.secondary)
             Button(action: onOpenSettings) {
@@ -53,7 +58,7 @@ struct PopupView: View {
 
     private var content: some View {
         Group {
-            if store.items.isEmpty {
+            if displayItems.isEmpty {
                 Text("履歴がありません")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -62,7 +67,7 @@ struct PopupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 2) {
-                            ForEach(Array(store.items.enumerated()), id: \.element.id) { index, item in
+                            ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
                                 HistoryRowView(item: item, isSelected: selectionModel.value == index)
                                     .id(index)
                                     .contentShape(Rectangle())
