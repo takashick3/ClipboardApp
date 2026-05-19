@@ -5,6 +5,7 @@ struct PopupView: View {
     @ObservedObject var selectionModel: SelectedIndexModel
     var onSelect: (ClipboardItem) -> Void
     var onClose: () -> Void
+    var onOpenSettings: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,6 +32,13 @@ struct PopupView: View {
             Text("\(store.items.count)件")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            Button(action: onOpenSettings) {
+                Image(systemName: "gearshape.fill")
+                    .foregroundColor(.secondary)
+                    .imageScale(.medium)
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 4)
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.secondary)
