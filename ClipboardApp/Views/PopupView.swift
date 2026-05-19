@@ -31,6 +31,13 @@ struct PopupView: View {
             Text("\(store.items.count)件")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary)
+                    .imageScale(.medium)
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 4)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
