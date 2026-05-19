@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PopupView: View {
     @ObservedObject var store: ClipboardStore
-    @Binding var selectedIndex: Int
+    @ObservedObject var selectionModel: SelectedIndexModel
     var onSelect: (ClipboardItem) -> Void
     var onClose: () -> Void
 
@@ -55,7 +55,7 @@ struct PopupView: View {
                     ScrollView {
                         LazyVStack(spacing: 2) {
                             ForEach(Array(store.items.enumerated()), id: \.element.id) { index, item in
-                                HistoryRowView(item: item, isSelected: selectedIndex == index)
+                                HistoryRowView(item: item, isSelected: selectionModel.value == index)
                                     .id(index)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
@@ -66,7 +66,7 @@ struct PopupView: View {
                         .padding(4)
                     }
                     .frame(maxHeight: NSScreen.main.map { $0.visibleFrame.height * 0.6 } ?? 400)
-                    .onChange(of: selectedIndex) { newValue in
+                    .onChange(of: selectionModel.value) { newValue in
                         withAnimation {
                             proxy.scrollTo(newValue, anchor: .center)
                         }

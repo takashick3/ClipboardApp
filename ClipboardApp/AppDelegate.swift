@@ -98,10 +98,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let store = ClipboardStore.shared
         let popupView = PopupView(
             store: store,
-            selectedIndex: Binding(
-                get: { [weak self] in self?.selectedIndexBinding.value ?? 0 },
-                set: { [weak self] in self?.selectedIndexBinding.value = $0 }
-            ),
+            selectionModel: selectedIndexBinding,
             onSelect: { [weak self] item in self?.pasteItem(item) },
             onClose: { [weak self] in self?.closePopup() }
         )
