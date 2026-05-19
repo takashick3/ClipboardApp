@@ -14,13 +14,26 @@ struct SnippetSettingsTab: View {
     }
 
     var body: some View {
-        HSplitView {
-            folderPane
-                .frame(minWidth: 150, maxWidth: 200)
-            snippetPane
-                .frame(minWidth: 200, maxWidth: .infinity)
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button("インポート") { store.importXML() }
+                Button("エクスポート") { store.exportXML() }
+                    .disabled(store.folders.isEmpty)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+
+            Divider()
+
+            HSplitView {
+                folderPane
+                    .frame(minWidth: 150, maxWidth: 200)
+                snippetPane
+                    .frame(minWidth: 200, maxWidth: .infinity)
+            }
+            .frame(maxHeight: .infinity)
         }
-        .frame(maxHeight: .infinity)
     }
 
     // MARK: - Folder Pane
@@ -131,12 +144,6 @@ struct SnippetSettingsTab: View {
                 }
                 .buttonStyle(.plain)
                 Spacer()
-                Button("エクスポート") { store.exportXML() }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 8)
-                Button("インポート") { store.importXML() }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 4)
             }
             .padding(.horizontal, 4)
         }

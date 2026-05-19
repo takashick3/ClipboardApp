@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import CoreGraphics
+import Combine
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
@@ -12,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
     private var popupState = PopupStateModel()
+    private var tabChangeCancellable: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -156,9 +158,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popupWindow = window
         setupLocalEventMonitor(clipboardStore: clipboardStore, snippetStore: snippetStore)
         setupGlobalClickMonitor()
+        setupTabChangeObserver(window: window, hosting: hosting)
     }
 
     private func closePopup() {
+        tabChangeCancellable = nil
         popupWindow?.close()
         popupWindow = nil
         if let m = localEventMonitor {
@@ -171,6 +175,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         previousApp?.activate(options: .activateIgnoringOtherApps)
         previousApp = nil
+    }
+
+    private func setupTabChangeObserver(window: NSWindow, hosting: NSHostingController<PopupView>) {
+        tabChangeCancellable = popupState.$activeTab
+            .dropFirst()
+            .sink { [weak self, weak window, weak hosting] _ in
+                DispatchQueue.main.async {
+                    guard let window = window, let hosting = hosting else { return }
+                    window.setContentSize(hosting.view.fittingSize)
+                    self?.positionWindow(window)
+                }
+            }
     }
 
     private func setupGlobalClickMonitor() {
