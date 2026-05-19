@@ -64,12 +64,6 @@ struct SnippetSettingsTab: View {
                 .onMove { indices, destination in
                     store.moveFolder(from: indices, to: destination)
                 }
-                .onDelete { indices in
-                    indices.forEach { i in store.deleteFolder(id: store.folders[i].id) }
-                    if selectedFolderID != nil && store.folders.first(where: { $0.id == selectedFolderID }) == nil {
-                        selectedFolderID = store.folders.first?.id
-                    }
-                }
             }
             .listStyle(.plain)
 
@@ -139,9 +133,6 @@ struct SnippetSettingsTab: View {
                 }
                 .onMove { indices, destination in
                     store.moveSnippet(inFolder: folder.id, from: indices, to: destination)
-                }
-                .onDelete { indices in
-                    indices.forEach { i in store.deleteSnippet(id: folder.snippets[i].id, fromFolder: folder.id) }
                 }
             }
             .listStyle(.plain)
