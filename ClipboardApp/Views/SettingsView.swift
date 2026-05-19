@@ -7,12 +7,16 @@ struct SettingsView: View {
                 .tabItem {
                     Label("一般", systemImage: "gearshape")
                 }
+            SnippetSettingsTab()
+                .tabItem {
+                    Label("スニペット", systemImage: "doc.text")
+                }
             CreditsTab()
                 .tabItem {
                     Label("クレジット", systemImage: "info.circle")
                 }
         }
-        .frame(width: 400, height: 340)
+        .frame(width: 500, height: 400)
         .padding()
     }
 }

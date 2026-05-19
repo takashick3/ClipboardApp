@@ -1,20 +1,29 @@
 import SwiftUI
 
+enum PopupTab {
+    case history
+    case snippets
+}
+
 struct PopupView: View {
-    @ObservedObject var store: ClipboardStore
-    @ObservedObject var selectionModel: SelectedIndexModel
+    @ObservedObject var clipboardStore: ClipboardStore
+    @ObservedObject var snippetStore: SnippetStore
+    @ObservedObject var state: PopupStateModel
     @ObservedObject private var settings = AppSettings.shared
     var onSelect: (ClipboardItem) -> Void
+    var onSelectSnippet: (String) -> Void
     var onClose: () -> Void
     var onOpenSettings: () -> Void
 
     private var displayItems: [ClipboardItem] {
-        Array(store.items.prefix(settings.maxHistoryCount))
+        Array(clipboardStore.items.prefix(settings.maxHistoryCount))
     }
 
     var body: some View {
         VStack(spacing: 0) {
             header
+            Divider()
+            tabBar
             Divider()
             content
         }
@@ -34,9 +43,11 @@ struct PopupView: View {
             Text("ClipboardApp Ver1.0.0")
                 .font(.headline)
             Spacer()
-            Text("\(displayItems.count)件")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if state.activeTab == .history {
+                Text("\(displayItems.count)件")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             Button(action: onOpenSettings) {
                 Image(systemName: "gearshape.fill")
                     .foregroundColor(.secondary)
@@ -56,7 +67,47 @@ struct PopupView: View {
         .padding(.vertical, 8)
     }
 
+    private var tabBar: some View {
+        HStack(spacing: 0) {
+            tabButton(title: "履歴", tab: .history)
+            tabButton(title: "スニペット", tab: .snippets)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+    }
+
+    private func tabButton(title: String, tab: PopupTab) -> some View {
+        Button(action: {
+            state.activeTab = tab
+            state.selectedIndex = 0
+            state.selectedSnippetFolder = nil
+        }) {
+            Text(title)
+                .font(.subheadline)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+                .background(state.activeTab == tab ? Color.accentColor.opacity(0.15) : Color.clear)
+                .cornerRadius(6)
+                .foregroundColor(state.activeTab == tab ? .accentColor : .secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
     private var content: some View {
+        Group {
+            if state.activeTab == .history {
+                historyContent
+            } else {
+                SnippetPopupView(
+                    store: snippetStore,
+                    state: state,
+                    onSelect: onSelectSnippet
+                )
+            }
+        }
+    }
+
+    private var historyContent: some View {
         Group {
             if displayItems.isEmpty {
                 Text("履歴がありません")
@@ -70,7 +121,7 @@ struct PopupView: View {
                             ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
                                 HistoryRowView(
                                     item: item,
-                                    isSelected: selectionModel.value == index,
+                                    isSelected: state.selectedIndex == index,
                                     fontSizeScale: settings.fontSizeScale
                                 )
                                 .id(index)
@@ -83,7 +134,7 @@ struct PopupView: View {
                         .padding(4)
                     }
                     .frame(maxHeight: NSScreen.main.map { $0.visibleFrame.height * settings.popupMaxHeightRatio } ?? 400)
-                    .onChange(of: selectionModel.value) { newValue in
+                    .onChange(of: state.selectedIndex) { newValue in
                         withAnimation {
                             proxy.scrollTo(newValue, anchor: .center)
                         }

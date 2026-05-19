@@ -10,13 +10,17 @@
 		04B4A4C2D164C9956DE622E2 /* ClipboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9758E64E74934FEEE24F4B4 /* ClipboardMonitor.swift */; };
 		05C9BBD35EA42730F624A3F7 /* FontSizeScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF0F0C66C5F004D2CD6D0EF /* FontSizeScale.swift */; };
 		0D70BED10CC1E5E41EAFD75A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01CFDC344989BDFDE50CE10 /* AppDelegate.swift */; };
+		202F968E0BDE356C7DDF552F /* SnippetPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D534150DBE0C83580D0C17 /* SnippetPopupView.swift */; };
 		8826DD318475627C56FC562D /* ClipboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85B0DC4571118DABBCA9162 /* ClipboardItem.swift */; };
 		8DE701145661D2906165D797 /* ClipboardAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6982783E59F9F0149EF0351 /* ClipboardAppApp.swift */; };
 		8E2AEC889B741D2C63ACEA58 /* PopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B69DCF93ECC79B6A29B087F /* PopupView.swift */; };
 		99510D12E2BB64DFF20EA186 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D7EC2E559FEE238411EA71B /* ServiceManagement.framework */; };
+		A1B562972CFE770FA512F662 /* SnippetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70EEA4A921F3B96734C6336B /* SnippetStore.swift */; };
 		A79489755D796F76C1FD30F7 /* AccessibilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */; };
 		AD2878B9C1B320ED948D29E5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 5CA55375B36246F79E157D11 /* icon.png */; };
 		B276724840B694F763016F37 /* HistoryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24181DE72A7D491053373913 /* HistoryRowView.swift */; };
+		B94DFD0B47F3E541D50FA44B /* SnippetItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A2B0205CCFE5CDDC8DC4CF /* SnippetItem.swift */; };
+		BA7B3AB0D08F8BD374B2046A /* SnippetSettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4703FBB98769B215DE87AC9B /* SnippetSettingsTab.swift */; };
 		C03FB629F8CAB8735870C1DA /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369BCFFDAD6002782406A906 /* ClipboardStore.swift */; };
 		D713F8D1FB637AA70939B0EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 645B87DF5883E9A8B1AA44CF /* Assets.xcassets */; };
 		E50D8EDC773C6CD617EED84A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DCD558E6C192666A6C1700 /* SettingsView.swift */; };
@@ -30,8 +34,12 @@
 		28422D85F9401506BB674400 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2C3E0758210BB866502B88EB /* ClipboardApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipboardApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		369BCFFDAD6002782406A906 /* ClipboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardStore.swift; sourceTree = "<group>"; };
+		44D534150DBE0C83580D0C17 /* SnippetPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetPopupView.swift; sourceTree = "<group>"; };
+		4703FBB98769B215DE87AC9B /* SnippetSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetSettingsTab.swift; sourceTree = "<group>"; };
 		5CA55375B36246F79E157D11 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		645B87DF5883E9A8B1AA44CF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		69A2B0205CCFE5CDDC8DC4CF /* SnippetItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetItem.swift; sourceTree = "<group>"; };
+		70EEA4A921F3B96734C6336B /* SnippetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetStore.swift; sourceTree = "<group>"; };
 		8BF0F0C66C5F004D2CD6D0EF /* FontSizeScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSizeScale.swift; sourceTree = "<group>"; };
 		97DCD558E6C192666A6C1700 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9D7EC2E559FEE238411EA71B /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
@@ -81,6 +89,8 @@
 				24181DE72A7D491053373913 /* HistoryRowView.swift */,
 				1B69DCF93ECC79B6A29B087F /* PopupView.swift */,
 				97DCD558E6C192666A6C1700 /* SettingsView.swift */,
+				44D534150DBE0C83580D0C17 /* SnippetPopupView.swift */,
+				4703FBB98769B215DE87AC9B /* SnippetSettingsTab.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -124,6 +134,7 @@
 				A9758E64E74934FEEE24F4B4 /* ClipboardMonitor.swift */,
 				369BCFFDAD6002782406A906 /* ClipboardStore.swift */,
 				B20E10270B017E1B7F4A3F3D /* PasteService.swift */,
+				70EEA4A921F3B96734C6336B /* SnippetStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -133,6 +144,7 @@
 			children = (
 				B85B0DC4571118DABBCA9162 /* ClipboardItem.swift */,
 				8BF0F0C66C5F004D2CD6D0EF /* FontSizeScale.swift */,
+				69A2B0205CCFE5CDDC8DC4CF /* SnippetItem.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -226,6 +238,10 @@
 				F94877269F023DAAC180022E /* PasteService.swift in Sources */,
 				8E2AEC889B741D2C63ACEA58 /* PopupView.swift in Sources */,
 				E50D8EDC773C6CD617EED84A /* SettingsView.swift in Sources */,
+				B94DFD0B47F3E541D50FA44B /* SnippetItem.swift in Sources */,
+				202F968E0BDE356C7DDF552F /* SnippetPopupView.swift in Sources */,
+				BA7B3AB0D08F8BD374B2046A /* SnippetSettingsTab.swift in Sources */,
+				A1B562972CFE770FA512F662 /* SnippetStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
