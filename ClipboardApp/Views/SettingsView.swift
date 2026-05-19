@@ -90,6 +90,10 @@ private struct CreditsTab: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
+            Text("Ver1.0.0")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
             Text("© 2026 takashick")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
