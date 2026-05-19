@@ -7,7 +7,7 @@ struct HistoryRowView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: isSelected ? "chevron.right" : "doc.on.clipboard")
+            Image(systemName: isSelected ? "chevron.right" : "list.bullet.clipboard")
                 .foregroundColor(isSelected ? .accentColor : .secondary)
                 .frame(width: 16)
 
