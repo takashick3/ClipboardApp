@@ -24,6 +24,8 @@ targets:
     sources:
       - path: ClipboardApp
         type: group
+    dependencies:
+      - sdk: ServiceManagement.framework
     settings:
       base:
         PRODUCT_NAME: ClipboardApp
