@@ -18,7 +18,7 @@ struct PopupView: View {
             Divider()
             content
         }
-        .frame(width: 400)
+        .frame(width: settings.popupWidth)
         .background(.regularMaterial)
         .cornerRadius(10)
         .overlay(
@@ -68,17 +68,21 @@ struct PopupView: View {
                     ScrollView {
                         LazyVStack(spacing: 2) {
                             ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
-                                HistoryRowView(item: item, isSelected: selectionModel.value == index)
-                                    .id(index)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        onSelect(item)
-                                    }
+                                HistoryRowView(
+                                    item: item,
+                                    isSelected: selectionModel.value == index,
+                                    fontSizeScale: settings.fontSizeScale
+                                )
+                                .id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onSelect(item)
+                                }
                             }
                         }
                         .padding(4)
                     }
-                    .frame(maxHeight: NSScreen.main.map { $0.visibleFrame.height * 0.6 } ?? 400)
+                    .frame(maxHeight: NSScreen.main.map { $0.visibleFrame.height * settings.popupMaxHeightRatio } ?? 400)
                     .onChange(of: selectionModel.value) { newValue in
                         withAnimation {
                             proxy.scrollTo(newValue, anchor: .center)

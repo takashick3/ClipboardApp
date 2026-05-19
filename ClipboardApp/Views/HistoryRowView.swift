@@ -3,6 +3,7 @@ import SwiftUI
 struct HistoryRowView: View {
     let item: ClipboardItem
     let isSelected: Bool
+    let fontSizeScale: FontSizeScale
 
     var body: some View {
         HStack(spacing: 8) {
@@ -11,6 +12,7 @@ struct HistoryRowView: View {
                 .frame(width: 16)
 
             Text(preview)
+                .font(fontSizeScale.rowFont)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .foregroundColor(.primary)
@@ -18,7 +20,7 @@ struct HistoryRowView: View {
             Spacer()
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.vertical, fontSizeScale.rowVerticalPadding)
         .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
         .cornerRadius(4)
     }
