@@ -180,11 +180,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupTabChangeObserver(window: NSWindow, hosting: NSHostingController<PopupView>) {
         tabChangeCancellable = popupState.$activeTab
             .dropFirst()
-            .sink { [weak self, weak window, weak hosting] _ in
+            .sink { [weak window, weak hosting] _ in
                 DispatchQueue.main.async {
                     guard let window = window, let hosting = hosting else { return }
-                    window.setContentSize(hosting.view.fittingSize)
-                    self?.positionWindow(window)
+                    let oldFrame = window.frame
+                    let newSize = hosting.view.fittingSize
+                    // 上辺を固定したまま高さだけ変える
+                    let newOriginY = oldFrame.maxY - newSize.height
+                    window.setFrame(NSRect(x: oldFrame.minX, y: newOriginY, width: newSize.width, height: newSize.height), display: true, animate: false)
                 }
             }
     }
