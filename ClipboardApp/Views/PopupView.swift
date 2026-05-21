@@ -8,6 +8,7 @@ enum PopupTab {
 struct PopupView: View {
     @ObservedObject var clipboardStore: ClipboardStore
     @ObservedObject var snippetStore: SnippetStore
+    @ObservedObject var pinnedStore: PinnedStore
     @ObservedObject var state: PopupStateModel
     @ObservedObject private var settings = AppSettings.shared
     var onSelect: (ClipboardItem) -> Void
@@ -109,7 +110,7 @@ struct PopupView: View {
 
     private var historyContent: some View {
         Group {
-            if displayItems.isEmpty {
+            if displayItems.isEmpty && pinnedStore.items.isEmpty {
                 Text("履歴がありません")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -118,17 +119,56 @@ struct PopupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 2) {
+                            // ピン済みセクション
+                            if !pinnedStore.items.isEmpty {
+                                ForEach(Array(pinnedStore.items.enumerated()), id: \.element.id) { i, pinnedItem in
+                                    PinnedRowView(
+                                        item: pinnedItem,
+                                        isSelected: state.selectedIndex == (i - pinnedStore.items.count),
+                                        fontSizeScale: settings.fontSizeScale,
+                                        onUnpin: { pinnedStore.unpin(id: pinnedItem.id) }
+                                    )
+                                    .id("pin-\(i)")
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { onSelectSnippet(pinnedItem.text) }
+                                    .draggable(pinnedItem.id.uuidString)
+                                    .dropDestination(for: String.self) { droppedIDs, _ in
+                                        guard let droppedID = droppedIDs.first,
+                                              let fromUUID = UUID(uuidString: droppedID),
+                                              let fromIndex = pinnedStore.items.firstIndex(where: { $0.id == fromUUID }),
+                                              fromIndex != i else { return false }
+                                        pinnedStore.move(
+                                            from: IndexSet(integer: fromIndex),
+                                            to: fromIndex < i ? i + 1 : i
+                                        )
+                                        return true
+                                    }
+                                }
+                                Divider()
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                            }
+
+                            // 履歴セクション
                             ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
                                 HistoryRowView(
                                     item: item,
                                     isSelected: state.selectedIndex == index,
-                                    fontSizeScale: settings.fontSizeScale
+                                    isPinned: pinnedStore.isPinned(item.text),
+                                    fontSizeScale: settings.fontSizeScale,
+                                    onTogglePin: {
+                                        if pinnedStore.isPinned(item.text) {
+                                            if let pinned = pinnedStore.items.first(where: { $0.text == item.text }) {
+                                                pinnedStore.unpin(id: pinned.id)
+                                            }
+                                        } else {
+                                            pinnedStore.pin(item.text)
+                                        }
+                                    }
                                 )
                                 .id(index)
                                 .contentShape(Rectangle())
-                                .onTapGesture {
-                                    onSelect(item)
-                                }
+                                .onTapGesture { onSelect(item) }
                             }
                         }
                         .padding(4)
@@ -136,7 +176,11 @@ struct PopupView: View {
                     .frame(maxHeight: NSScreen.main.map { $0.visibleFrame.height * settings.popupMaxHeightRatio } ?? 400)
                     .onChange(of: state.selectedIndex) { newValue in
                         withAnimation {
-                            proxy.scrollTo(newValue, anchor: .center)
+                            if newValue < 0 {
+                                proxy.scrollTo("pin-\(pinnedStore.items.count + newValue)", anchor: .center)
+                            } else {
+                                proxy.scrollTo(newValue, anchor: .center)
+                            }
                         }
                     }
                 }

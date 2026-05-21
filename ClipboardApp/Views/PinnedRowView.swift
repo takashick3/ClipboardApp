@@ -1,17 +1,16 @@
 import SwiftUI
 
-struct HistoryRowView: View {
-    let item: ClipboardItem
+struct PinnedRowView: View {
+    let item: PinnedItem
     let isSelected: Bool
-    let isPinned: Bool
     let fontSizeScale: FontSizeScale
-    var onTogglePin: () -> Void
+    var onUnpin: () -> Void
 
     @State private var isHoveringIcon = false
 
     var body: some View {
         HStack(spacing: 8) {
-            Button(action: onTogglePin) {
+            Button(action: onUnpin) {
                 Image(systemName: iconName)
                     .foregroundColor(iconColor)
                     .frame(width: 16)
@@ -35,14 +34,12 @@ struct HistoryRowView: View {
 
     private var iconName: String {
         if isSelected { return "chevron.right" }
-        if isHoveringIcon { return "pin.fill" }
-        return "list.bullet.clipboard"
+        return isHoveringIcon ? "pin.slash" : "pin.fill"
     }
 
     private var iconColor: Color {
         if isSelected { return .accentColor }
-        if isHoveringIcon { return .accentColor }
-        return .secondary
+        return isHoveringIcon ? .secondary : .accentColor
     }
 
     private var preview: String {

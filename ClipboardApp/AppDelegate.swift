@@ -121,9 +121,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let clipboardStore = ClipboardStore.shared
         let snippetStore = SnippetStore.shared
+        let pinnedStore = PinnedStore.shared
         let popupView = PopupView(
             clipboardStore: clipboardStore,
             snippetStore: snippetStore,
+            pinnedStore: pinnedStore,
             state: popupState,
             onSelect: { [weak self] item in self?.pasteItem(item) },
             onSelectSnippet: { [weak self] text in self?.pasteSnippet(text) },
@@ -251,14 +253,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func moveSelectionUp(snippetStore: SnippetStore) {
-        let minIndex: Int = (popupState.activeTab == .snippets && popupState.selectedSnippetFolder != nil) ? -1 : 0
-        if popupState.selectedIndex > minIndex {
-            popupState.selectedIndex -= 1
+        if popupState.activeTab == .history {
+            let minIndex = -PinnedStore.shared.items.count
+            if popupState.selectedIndex > minIndex {
+                popupState.selectedIndex -= 1
+            }
+        } else {
+            let minIndex: Int = popupState.selectedSnippetFolder != nil ? -1 : 0
+            if popupState.selectedIndex > minIndex {
+                popupState.selectedIndex -= 1
+            }
         }
     }
 
     private func handleEnter(clipboardStore: ClipboardStore, snippetStore: SnippetStore) {
         if popupState.activeTab == .history {
+            if popupState.selectedIndex < 0 {
+                // ピン済みアイテム: selectedIndex -1 → items[count-1], -count → items[0]
+                let pinnedItems = PinnedStore.shared.items
+                let idx = pinnedItems.count + popupState.selectedIndex
+                guard idx >= 0 && idx < pinnedItems.count else { return }
+                pasteSnippet(pinnedItems[idx].text)
+                return
+            }
             let displayItems = Array(clipboardStore.items.prefix(AppSettings.shared.maxHistoryCount))
             guard !displayItems.isEmpty else { return }
             pasteItem(displayItems[popupState.selectedIndex])
