@@ -34,15 +34,20 @@ struct HistoryRowView: View {
     }
 
     private var iconName: String {
+        // ホバー中はピン操作を優先（選択中でも同様）
+        if isHoveringIcon {
+            return isPinned ? "pin.slash" : "pin.fill"
+        }
         if isSelected { return "chevron.right" }
-        if isHoveringIcon { return "pin.fill" }
-        return "list.bullet.clipboard"
+        return isPinned ? "pin.fill" : "list.bullet.clipboard"
     }
 
     private var iconColor: Color {
+        if isHoveringIcon {
+            return isPinned ? .secondary : .accentColor
+        }
         if isSelected { return .accentColor }
-        if isHoveringIcon { return .accentColor }
-        return .secondary
+        return isPinned ? .accentColor : .secondary
     }
 
     private var preview: String {
