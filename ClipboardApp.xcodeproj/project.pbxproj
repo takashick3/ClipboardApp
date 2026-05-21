@@ -17,6 +17,7 @@
 		8E2AEC889B741D2C63ACEA58 /* PopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B69DCF93ECC79B6A29B087F /* PopupView.swift */; };
 		99510D12E2BB64DFF20EA186 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D7EC2E559FEE238411EA71B /* ServiceManagement.framework */; };
 		99DF8CDCCF105898471752CE /* PinnedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D9ECEBAF2228EE4E792B5F /* PinnedStore.swift */; };
+		9E15CCA7A4E228E5CDD78D48 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E618B5368D5BC474A4B4AF /* AppConstants.swift */; };
 		A1B562972CFE770FA512F662 /* SnippetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70EEA4A921F3B96734C6336B /* SnippetStore.swift */; };
 		A79489755D796F76C1FD30F7 /* AccessibilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */; };
 		AD2878B9C1B320ED948D29E5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 5CA55375B36246F79E157D11 /* icon.png */; };
@@ -32,6 +33,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00E618B5368D5BC474A4B4AF /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		07542EE53DF1BB9A4D920609 /* PinnedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedItem.swift; sourceTree = "<group>"; };
 		1B69DCF93ECC79B6A29B087F /* PopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupView.swift; sourceTree = "<group>"; };
 		24181DE72A7D491053373913 /* HistoryRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRowView.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 		C5FA3CC74ADA492B16DAF47A /* ClipboardApp */ = {
 			isa = PBXGroup;
 			children = (
+				00E618B5368D5BC474A4B4AF /* AppConstants.swift */,
 				F01CFDC344989BDFDE50CE10 /* AppDelegate.swift */,
 				645B87DF5883E9A8B1AA44CF /* Assets.xcassets */,
 				A6982783E59F9F0149EF0351 /* ClipboardAppApp.swift */,
@@ -236,6 +239,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A79489755D796F76C1FD30F7 /* AccessibilityChecker.swift in Sources */,
+				9E15CCA7A4E228E5CDD78D48 /* AppConstants.swift in Sources */,
 				0D70BED10CC1E5E41EAFD75A /* AppDelegate.swift in Sources */,
 				F6C1CA992CECACE61F7BE299 /* AppSettings.swift in Sources */,
 				8DE701145661D2906165D797 /* ClipboardAppApp.swift in Sources */,

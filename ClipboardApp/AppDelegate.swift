@@ -129,7 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             state: popupState,
             onSelect: { [weak self] item in self?.pasteItem(item) },
             onSelectSnippet: { [weak self] text in self?.pasteSnippet(text) },
-            onClose: { [weak self] in self?.closePopup() },
+            onClose: { [weak self] in self?.confirmQuit() },
             onOpenSettings: { [weak self] in
                 self?.closePopup()
                 self?.openSettings()
@@ -320,6 +320,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         closePopup()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             PasteService.shared.paste(text: text, monitor: self.monitor)
+        }
+    }
+
+    // MARK: - Quit
+
+    private func confirmQuit() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "ClipboardApp を終了しますか？"
+        alert.informativeText = "終了するとクリップボード履歴の監視が停止します。"
+        alert.addButton(withTitle: "終了")
+        alert.addButton(withTitle: "キャンセル")
+        alert.alertStyle = .warning
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSApp.terminate(nil)
         }
     }
 

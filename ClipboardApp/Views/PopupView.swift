@@ -41,7 +41,7 @@ struct PopupView: View {
         HStack {
             Image(systemName: "list.bullet.clipboard")
                 .foregroundColor(.accentColor)
-            Text("ClipboardApp Ver1.0.0")
+            Text("ClipboardApp \(AppConstants.versionLabel)")
                 .font(.headline)
             Spacer()
             if state.activeTab == .history {

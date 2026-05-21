@@ -94,7 +94,7 @@ private struct CreditsTab: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Ver1.0.0")
+            Text(AppConstants.versionLabel)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
