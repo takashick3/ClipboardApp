@@ -16,6 +16,16 @@ settings:
     PRODUCT_NAME: ClipboardApp
     PRODUCT_BUNDLE_IDENTIFIER: com.takashick3.ClipboardApp
 
+schemes:
+  ClipboardApp:
+    build:
+      targets:
+        ClipboardApp: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
 targets:
   ClipboardApp:
     type: application
