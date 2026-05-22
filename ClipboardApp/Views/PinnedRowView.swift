@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct PinnedRowView: View {
     let item: PinnedItem
@@ -17,7 +18,10 @@ struct PinnedRowView: View {
             .buttonStyle(.plain)
             .frame(width: 24, height: 24)
             .contentShape(Rectangle())
-            .onHover { isHoveringIcon = $0 }
+            .onHover { hovering in
+                isHoveringIcon = hovering
+                if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+            }
 
             Text(preview)
                 .font(fontSizeScale.rowFont)

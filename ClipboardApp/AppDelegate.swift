@@ -216,19 +216,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             switch event.keyCode {
-            case 53: // Escape
-                if self.popupState.activeTab == .snippets && self.popupState.selectedSnippetFolder != nil {
-                    self.popupState.selectedSnippetFolder = nil
-                    self.popupState.selectedIndex = 0
-                } else {
-                    self.closePopup()
-                }
+            case 53: // Escape — 常にウィンドウを閉じる
+                self.closePopup()
                 return nil
-            case 123: // Left arrow — スニペットフォルダ内で戻る
-                if self.popupState.activeTab == .snippets,
-                   let folder = self.popupState.selectedSnippetFolder {
-                    self.popupState.selectedSnippetFolder = nil
-                    self.popupState.selectedIndex = snippetStore.folders.firstIndex(where: { $0.id == folder.id }) ?? 0
+            case 124: // Right arrow
+                if self.popupState.activeTab == .history {
+                    // 履歴タブ → スニペットタブへ
+                    self.handleShortcut(tab: .snippets)
+                } else if self.popupState.selectedSnippetFolder == nil {
+                    // スニペットTOP → フォルダを開く（Enterと同じ）
+                    self.handleEnter(clipboardStore: clipboardStore, snippetStore: snippetStore)
+                }
+                // フォルダ内では何もしない
+                return nil
+            case 123: // Left arrow
+                if self.popupState.activeTab == .snippets {
+                    if let folder = self.popupState.selectedSnippetFolder {
+                        // フォルダ内 → フォルダ一覧に戻る
+                        self.popupState.selectedSnippetFolder = nil
+                        self.popupState.selectedIndex = snippetStore.folders.firstIndex(where: { $0.id == folder.id }) ?? 0
+                    } else {
+                        // スニペットTOP → 履歴タブへ
+                        self.handleShortcut(tab: .history)
+                    }
                     return nil
                 }
                 return event
@@ -338,15 +348,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Quit
 
     private func confirmQuit() {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = "ClipboardApp を終了しますか？"
-        alert.informativeText = "終了するとクリップボード履歴の監視が停止します。"
-        alert.addButton(withTitle: "終了")
-        alert.addButton(withTitle: "キャンセル")
-        alert.alertStyle = .warning
-        if alert.runModal() == .alertFirstButtonReturn {
-            NSApp.terminate(nil)
+        // ポップアップとそのモニター類を先に解除してから確認ダイアログを出す。
+        // closePopup() を呼ばずにアラートを表示すると globalClickMonitor が
+        // 「終了」ボタンのクリックを拾って closePopup() を runModal 中に実行し、
+        // previousApp?.activate() でフォーカスが奪われてダイアログが宙ぶらりんになる。
+        closePopup()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.messageText = "ClipboardApp を終了しますか？"
+            alert.informativeText = "終了するとクリップボード履歴の監視が停止します。"
+            alert.addButton(withTitle: "終了")
+            alert.addButton(withTitle: "キャンセル")
+            alert.alertStyle = .warning
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSApp.terminate(nil)
+            }
         }
     }
 

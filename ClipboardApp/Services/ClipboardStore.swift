@@ -15,6 +15,10 @@ class ClipboardStore: ObservableObject {
     }
 
     func add(_ text: String) {
+        // 既存の同一テキストがあれば削除して先頭に移動（重複排除）
+        if let existingIndex = items.firstIndex(where: { $0.text == text }) {
+            items.remove(at: existingIndex)
+        }
         let item = ClipboardItem(text: text)
         items.insert(item, at: 0)
         if items.count > Self.maxStorageCount {

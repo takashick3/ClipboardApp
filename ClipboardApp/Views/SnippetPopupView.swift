@@ -23,7 +23,7 @@ struct SnippetPopupView: View {
     private var folderList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 2) {
+                VStack(spacing: 2) {
                     ForEach(Array(store.folders.enumerated()), id: \.element.id) { index, folder in
                         FolderRowView(
                             folder: folder,
@@ -49,7 +49,7 @@ struct SnippetPopupView: View {
     private func snippetList(folder: SnippetFolder) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 2) {
+                VStack(spacing: 2) {
                     // Back row
                     BackRowView(title: folder.title, isSelected: state.selectedIndex == -1)
                         .id(-1)
