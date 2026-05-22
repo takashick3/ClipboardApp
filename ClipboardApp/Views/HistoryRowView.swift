@@ -14,9 +14,10 @@ struct HistoryRowView: View {
             Button(action: onTogglePin) {
                 Image(systemName: iconName)
                     .foregroundColor(iconColor)
-                    .frame(width: 16)
             }
             .buttonStyle(.plain)
+            .frame(width: 24, height: 24)
+            .contentShape(Rectangle())
             .onHover { isHoveringIcon = $0 }
 
             Text(preview)

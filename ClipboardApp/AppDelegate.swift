@@ -180,18 +180,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupTabChangeObserver(window: NSWindow, hosting: NSHostingController<PopupView>) {
-        tabChangeCancellable = popupState.$activeTab
-            .dropFirst()
-            .sink { [weak window, weak hosting] _ in
-                DispatchQueue.main.async {
-                    guard let window = window, let hosting = hosting else { return }
-                    let oldFrame = window.frame
-                    let newSize = hosting.view.fittingSize
-                    // 上辺を固定したまま高さだけ変える
-                    let newOriginY = oldFrame.maxY - newSize.height
-                    window.setFrame(NSRect(x: oldFrame.minX, y: newOriginY, width: newSize.width, height: newSize.height), display: true, animate: false)
-                }
+        // タブ切り替え・フォルダ移動どちらでもウィンドウをリサイズ
+        tabChangeCancellable = Publishers.Merge(
+            popupState.$activeTab.dropFirst().map { _ in () },
+            popupState.$selectedSnippetFolder.dropFirst().map { _ in () }
+        )
+        .sink { [weak window, weak hosting] _ in
+            // SwiftUI の再レイアウト完了を待ってからサイズを測る
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                guard let window = window, let hosting = hosting else { return }
+                let oldFrame = window.frame
+                let newSize = hosting.view.fittingSize
+                // 上辺を固定したまま高さだけ変える
+                let newOriginY = oldFrame.maxY - newSize.height
+                window.setFrame(NSRect(x: oldFrame.minX, y: newOriginY, width: newSize.width, height: newSize.height), display: true, animate: false)
             }
+        }
     }
 
     private func setupGlobalClickMonitor() {
@@ -220,6 +224,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     self.closePopup()
                 }
                 return nil
+            case 123: // Left arrow — スニペットフォルダ内で戻る
+                if self.popupState.activeTab == .snippets,
+                   let folder = self.popupState.selectedSnippetFolder {
+                    self.popupState.selectedSnippetFolder = nil
+                    self.popupState.selectedIndex = snippetStore.folders.firstIndex(where: { $0.id == folder.id }) ?? 0
+                    return nil
+                }
+                return event
             case 125: // Down arrow
                 self.moveSelectionDown(clipboardStore: clipboardStore, snippetStore: snippetStore)
                 return nil
