@@ -10,22 +10,29 @@ struct AccessibilityChecker {
     static func requestAccessibilityIfNeeded() {
         guard !isAccessibilityEnabled() else { return }
 
-        // prompt: true でシステムに権限リクエストを発行し、
-        // アプリを正しい identity で TCC データベースに登録させる
-        let promptOptions: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
-        AXIsProcessTrustedWithOptions(promptOptions)
-
+        // Step1: まず説明ダイアログを出してからシステムダイアログを発火させる。
+        // 逆順にすると「拒否」と「終了」が同時に出て混乱するため必ずこの順序を守る。
         let alert = NSAlert()
         alert.messageText = "アクセシビリティ権限が必要です"
-        alert.informativeText = "ClipboardApp が自動ペースト機能を使用するには、アクセシビリティ権限が必要です。\n\n「システム設定」>「プライバシーとセキュリティ」>「アクセシビリティ」で ClipboardApp を許可してください。"
+        alert.informativeText = """
+            ClipboardApp が自動ペースト機能を使用するには、アクセシビリティ権限が必要です。
+
+            「続ける」を押すと確認ダイアログが表示されます。
+            「システム設定を開く」→ ClipboardApp を ON にした後、
+            アプリを再起動してください。
+            """
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "システム設定を開く")
+        alert.addButton(withTitle: "続ける")
         alert.addButton(withTitle: "終了")
 
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            NSApp.terminate(nil)
+            return
         }
+
+        // Step2: ユーザーが「続ける」を押してからシステムダイアログを発火（TCC に正しく登録）
+        let promptOptions: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
+        AXIsProcessTrustedWithOptions(promptOptions)
         NSApp.terminate(nil)
     }
 }
