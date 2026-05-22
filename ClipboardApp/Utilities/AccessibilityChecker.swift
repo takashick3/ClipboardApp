@@ -10,6 +10,11 @@ struct AccessibilityChecker {
     static func requestAccessibilityIfNeeded() {
         guard !isAccessibilityEnabled() else { return }
 
+        // prompt: true でシステムに権限リクエストを発行し、
+        // アプリを正しい identity で TCC データベースに登録させる
+        let promptOptions: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
+        AXIsProcessTrustedWithOptions(promptOptions)
+
         let alert = NSAlert()
         alert.messageText = "アクセシビリティ権限が必要です"
         alert.informativeText = "ClipboardApp が自動ペースト機能を使用するには、アクセシビリティ権限が必要です。\n\n「システム設定」>「プライバシーとセキュリティ」>「アクセシビリティ」で ClipboardApp を許可してください。"
