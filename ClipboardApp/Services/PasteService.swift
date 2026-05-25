@@ -22,6 +22,7 @@ class PasteService {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 monitor.setPasteInProgress(false)
                 // クリップボードは意図的に復元しない
+                ToastWindowController.shared.show(message: "Cmd+V で貼り付けできます")
             }
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
