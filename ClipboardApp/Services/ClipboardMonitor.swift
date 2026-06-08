@@ -34,11 +34,17 @@ class ClipboardMonitor {
         ClipboardStore.shared.add(text)
     }
 
-    /// プレーンテキスト → RTF → RTFD の順で取得を試みる
+    /// プレーンテキスト → RTF → RTFD → fileURL の順で取得を試みる
     private func extractText(from pasteboard: NSPasteboard) -> String? {
         // 1. プレーンテキスト（最も一般的）
         if let text = pasteboard.string(forType: .string) {
             return text
+        }
+
+        // 1b. ファイルURL（Finder のクイックアクション等でファイルパスをコピーした場合）
+        if let urlString = pasteboard.string(forType: .fileURL),
+           let url = URL(string: urlString) {
+            return url.path
         }
 
         // 2. RTF（Teams / Slack などリッチテキストアプリ）
