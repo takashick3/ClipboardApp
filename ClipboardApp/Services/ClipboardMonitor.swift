@@ -37,7 +37,8 @@ class ClipboardMonitor {
     /// プレーンテキスト → RTF → RTFD → ファイルパス → URL → HTML の順で取得を試みる
     private func extractText(from pasteboard: NSPasteboard) -> String? {
         // 1. プレーンテキスト（最も一般的）
-        if let text = pasteboard.string(forType: .string) {
+        if let text = pasteboard.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !text.isEmpty {
             return text
         }
 
@@ -58,11 +59,13 @@ class ClipboardMonitor {
         // 4. ファイルパス（Finder のクイックアクション等）
         //    複数選択時は改行区切りで結合する
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-            return urls.map(\.path).joined(separator: "\n")
+            let text = urls.map(\.path).joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty { return text }
         }
 
         // 5. Web URL（メール・メモアプリ等でリンクのみコピーした場合）
-        if let urlString = pasteboard.string(forType: .URL) {
+        if let urlString = pasteboard.string(forType: .URL)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !urlString.isEmpty {
             return urlString
         }
 
