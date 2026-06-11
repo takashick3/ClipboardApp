@@ -55,8 +55,8 @@ targets:
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         LSUIElement: true
         NSHighResolutionCapable: true
-        CFBundleShortVersionString: "1.1.1"
-        CFBundleVersion: "3"
+        CFBundleShortVersionString: "1.1.2"
+        CFBundleVersion: "4"
         CFBundleLocalizations: [ja, en]
         CFBundleDevelopmentRegion: ja
         NSAppleEventsUsageDescription: "クリップボードの内容を貼り付けるために使用します。"

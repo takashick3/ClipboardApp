@@ -7,57 +7,115 @@ class PasteService {
 
     private init() {}
 
+    /// ポップアップを開く直前に捕捉した、貼り付け先の要素とそのセキュア判定。
+    /// ポップアップにフォーカスが移った後でも元のフィールドへ書き込めるようにする。
+    private var capturedElement: AXUIElement?
+    private var capturedIsSecure = false
+
+    /// ポップアップを開く「直前」に呼び出すこと。
+    /// このタイミングならまだ元のフィールド（パスワード欄など）にフォーカスがあるため、
+    /// 正しくセキュア判定でき、要素参照も保持できる。
+    func captureTarget() {
+        guard let element = copyFocusedElement() else {
+            capturedElement = nil
+            capturedIsSecure = false
+            return
+        }
+        capturedElement = element
+        capturedIsSecure = isSecureTextField(element)
+    }
+
     func paste(text: String, monitor: ClipboardMonitor) {
-        let previousText = NSPasteboard.general.string(forType: .string)
-        let isSecure = isFocusedElementSecure()
+        let wasSecure = capturedIsSecure
+        let target = capturedElement
+        clearCapture()
 
         monitor.setPasteInProgress(true)
 
+        // ① セキュア欄: 捕捉済みの要素へ AX 経由で直接書き込む。
+        //    キーイベントもクリップボードも使わないため、フォーカスが移っていても、
+        //    Secure Event Input が有効でも書き込める（要素が許可していれば）。
+        if wasSecure, let target, setValueViaAccessibility(target, text: text) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                monitor.setPasteInProgress(false)
+            }
+            return
+        }
+
+        // クリップボードへ載せて ⌘V を送る共通処理。
+        let previousText = NSPasteboard.general.string(forType: .string)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
 
-        if isSecure {
-            // パスワード欄などセキュアな入力フィールドでは macOS が CGEvent をブロックする。
-            // クリップボードにセットしたまま残し、ユーザーが手動で Cmd+V で貼り付けられる状態にする。
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                monitor.setPasteInProgress(false)
-                // クリップボードは意図的に復元しない
-                ToastWindowController.shared.show(message: "Cmd+V で貼り付けできます")
-            }
-        } else {
+        if wasSecure {
+            // ② AX 書き込み不可のセキュア欄。⌘V を試しつつ、
+            //    失敗に備えてクリップボードは復元せず手動 ⌘V 用に残す。
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
-
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     monitor.setPasteInProgress(false)
-                    if let prev = previousText {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(prev, forType: .string)
-                    }
+                    ToastWindowController.shared.show(message: "貼り付かない場合は Cmd+V")
+                }
+            }
+        } else {
+            // ③ 通常フィールド: ⌘V を送り、クリップボードを元に戻す。
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self.sendCmdV()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    monitor.setPasteInProgress(false)
+                    self.restoreClipboard(previousText)
                 }
             }
         }
     }
 
-    /// フォーカス中の UI 要素がセキュアテキストフィールド（パスワード欄など）か判定する。
-    /// セキュア入力モードでは CGEvent による Cmd+V がブロックされるため、
-    /// 自動貼り付けをスキップしてクリップボードを残す判断に使う。
-    private func isFocusedElementSecure() -> Bool {
+    private func clearCapture() {
+        capturedElement = nil
+        capturedIsSecure = false
+    }
+
+    private func restoreClipboard(_ previousText: String?) {
+        guard let prev = previousText else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(prev, forType: .string)
+    }
+
+    /// 現在フォーカスされている UI 要素を取得する。
+    private func copyFocusedElement() -> AXUIElement? {
         let systemWide = AXUIElementCreateSystemWide()
         var focusedRef: CFTypeRef?
         guard AXUIElementCopyAttributeValue(systemWide,
                                             kAXFocusedUIElementAttribute as CFString,
                                             &focusedRef) == .success,
-              let focusedRef else { return false }
+              let focusedRef else { return nil }
 
-        let focusedElement = focusedRef as! AXUIElement  // AXUIElement は CFTypeRef と toll-free bridge
+        return (focusedRef as! AXUIElement)  // AXUIElement は CFTypeRef と toll-free bridge
+    }
+
+    /// 要素がセキュアテキストフィールド（パスワード欄など）か判定する。
+    private func isSecureTextField(_ element: AXUIElement) -> Bool {
         var subroleRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(focusedElement,
+        guard AXUIElementCopyAttributeValue(element,
                                             kAXSubroleAttribute as CFString,
                                             &subroleRef) == .success,
               let subrole = subroleRef as? String else { return false }
 
         return subrole == "AXSecureTextField"
+    }
+
+    /// Accessibility 経由でフィールドの値に直接テキストを書き込む。
+    /// キーイベントを使わないため Secure Event Input の影響を受けないが、
+    /// フィールド側が書き込みを許可していない場合は失敗する。
+    private func setValueViaAccessibility(_ element: AXUIElement, text: String) -> Bool {
+        var settable: DarwinBoolean = false
+        guard AXUIElementIsAttributeSettable(element,
+                                             kAXValueAttribute as CFString,
+                                             &settable) == .success,
+              settable.boolValue else { return false }
+
+        return AXUIElementSetAttributeValue(element,
+                                            kAXValueAttribute as CFString,
+                                            text as CFString) == .success
     }
 
     private func sendCmdV() {

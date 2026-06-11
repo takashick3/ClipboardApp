@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import CoreGraphics
 import Combine
+import Carbon
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
@@ -9,6 +10,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private let monitor = ClipboardMonitor()
     private var eventTap: CFMachPort?
+    private var hotKeyRefs: [EventHotKeyRef?] = []
+    private var hotKeyEventHandler: EventHandlerRef?
     private var localEventMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
@@ -21,11 +24,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         monitor.start()
         setupEventTap()
+        setupCarbonHotKeys()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         monitor.stop()
         tearDownEventTap()
+        tearDownCarbonHotKeys()
         if let m = localEventMonitor { NSEvent.removeMonitor(m) }
     }
 
@@ -78,6 +83,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         eventTap = nil
     }
 
+    // MARK: - Carbon HotKey (Secure Event Input でも発火するか検証中)
+
+    /// RegisterEventHotKey でグローバルホットキーを登録する。
+    /// CGEventTap と違いイベントストリームを傍受しないため、
+    /// パスワード欄（Secure Event Input 有効時）でも発火する可能性がある。
+    private func setupCarbonHotKeys() {
+        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
+                                      eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { (_, eventRef, userData) -> OSStatus in
+            guard let eventRef, let userData else { return noErr }
+            var hotKeyID = EventHotKeyID()
+            GetEventParameter(eventRef,
+                              EventParamName(kEventParamDirectObject),
+                              EventParamType(typeEventHotKeyID),
+                              nil,
+                              MemoryLayout<EventHotKeyID>.size,
+                              nil,
+                              &hotKeyID)
+            let delegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
+            DispatchQueue.main.async {
+                switch hotKeyID.id {
+                case 1: delegate.handleShortcut(tab: .history)
+                case 2: delegate.handleShortcut(tab: .snippets)
+                default: break
+                }
+            }
+            return noErr
+        }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &hotKeyEventHandler)
+
+        let modifiers = UInt32(cmdKey | shiftKey)
+        registerHotKey(keyCode: 9, modifiers: modifiers, id: 1)   // V → 履歴
+        registerHotKey(keyCode: 11, modifiers: modifiers, id: 2)  // B → スニペット
+    }
+
+    private func registerHotKey(keyCode: UInt32, modifiers: UInt32, id: UInt32) {
+        let hotKeyID = EventHotKeyID(signature: OSType(0x636C6970), id: id)  // 'clip'
+        var ref: EventHotKeyRef?
+        let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID,
+                                         GetApplicationEventTarget(), 0, &ref)
+        if status == noErr {
+            hotKeyRefs.append(ref)
+        } else {
+            NSLog("[HotKey] registration failed id=\(id) status=\(status)")
+        }
+    }
+
+    private func tearDownCarbonHotKeys() {
+        for case let ref? in hotKeyRefs {
+            UnregisterEventHotKey(ref)
+        }
+        hotKeyRefs.removeAll()
+        if let handler = hotKeyEventHandler {
+            RemoveEventHandler(handler)
+            hotKeyEventHandler = nil
+        }
+    }
+
     private func handleCGEvent(_ event: CGEvent) -> Unmanaged<CGEvent>? {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let flags = event.flags
@@ -115,6 +177,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showPopup(tab: PopupTab) {
         previousApp = NSWorkspace.shared.frontmostApplication
+        // フォーカスを奪う前に貼り付け先（パスワード欄など）を捕捉しておく
+        PasteService.shared.captureTarget()
         popupState.activeTab = tab
         popupState.selectedIndex = 0
         popupState.selectedSnippetFolder = nil
