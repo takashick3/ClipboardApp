@@ -102,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                               nil,
                               &hotKeyID)
             let delegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
+            DebugLog.log("[HotKey] fired id=\(hotKeyID.id)")
             DispatchQueue.main.async {
                 switch hotKeyID.id {
                 case 1: delegate.handleShortcut(tab: .history)
@@ -124,8 +125,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                          GetApplicationEventTarget(), 0, &ref)
         if status == noErr {
             hotKeyRefs.append(ref)
+            DebugLog.log("[HotKey] registered id=\(id) keyCode=\(keyCode)")
         } else {
-            NSLog("[HotKey] registration failed id=\(id) status=\(status)")
+            DebugLog.log("[HotKey] registration failed id=\(id) status=\(status)")
         }
     }
 

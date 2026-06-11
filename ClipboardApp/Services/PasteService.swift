@@ -19,10 +19,12 @@ class PasteService {
         guard let element = copyFocusedElement() else {
             capturedElement = nil
             capturedIsSecure = false
+            DebugLog.log("[Capture] フォーカス要素なし")
             return
         }
         capturedElement = element
         capturedIsSecure = isSecureTextField(element)
+        DebugLog.log("[Capture] secure=\(capturedIsSecure)")
     }
 
     func paste(text: String, monitor: ClipboardMonitor) {
@@ -36,6 +38,7 @@ class PasteService {
         //    キーイベントもクリップボードも使わないため、フォーカスが移っていても、
         //    Secure Event Input が有効でも書き込める（要素が許可していれば）。
         if wasSecure, let target, setValueViaAccessibility(target, text: text) {
+            DebugLog.log("[Paste] → ① AX 直接書き込み成功（捕捉済みセキュア欄）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 monitor.setPasteInProgress(false)
             }
@@ -50,6 +53,7 @@ class PasteService {
         if wasSecure {
             // ② AX 書き込み不可のセキュア欄。⌘V を試しつつ、
             //    失敗に備えてクリップボードは復元せず手動 ⌘V 用に残す。
+            DebugLog.log("[Paste] → ② セキュア欄だが AX 不可（⌘V／失敗時は手動）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -59,6 +63,7 @@ class PasteService {
             }
         } else {
             // ③ 通常フィールド: ⌘V を送り、クリップボードを元に戻す。
+            DebugLog.log("[Paste] → ③ 通常フィールド（⌘V）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
