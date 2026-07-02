@@ -29,6 +29,7 @@
 		C03FB629F8CAB8735870C1DA /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369BCFFDAD6002782406A906 /* ClipboardStore.swift */; };
 		D3BA116FB47F7A8BC0F6EA2A /* PinnedRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF60927128611CD1A2FD953 /* PinnedRowView.swift */; };
 		D713F8D1FB637AA70939B0EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 645B87DF5883E9A8B1AA44CF /* Assets.xcassets */; };
+		DC57CFBDDD3B970FAC5C4CFC /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95AE5BA39CEB4A30B3806BFC /* DebugLog.swift */; };
 		E50D8EDC773C6CD617EED84A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DCD558E6C192666A6C1700 /* SettingsView.swift */; };
 		F6C1CA992CECACE61F7BE299 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB443171CAABA46D0A622938 /* AppSettings.swift */; };
 		F94877269F023DAAC180022E /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E10270B017E1B7F4A3F3D /* PasteService.swift */; };
@@ -51,6 +52,7 @@
 		84D9ECEBAF2228EE4E792B5F /* PinnedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedStore.swift; sourceTree = "<group>"; };
 		89AC044D153F4B1AE67AAE18 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		8BF0F0C66C5F004D2CD6D0EF /* FontSizeScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSizeScale.swift; sourceTree = "<group>"; };
+		95AE5BA39CEB4A30B3806BFC /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 		97DCD558E6C192666A6C1700 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9D7EC2E559FEE238411EA71B /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		A6982783E59F9F0149EF0351 /* ClipboardAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardAppApp.swift; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */,
+				95AE5BA39CEB4A30B3806BFC /* DebugLog.swift */,
 				DEA7AB57061220E6E4B1249E /* ToastWindowController.swift */,
 			);
 			path = Utilities;
@@ -252,6 +255,7 @@
 				8826DD318475627C56FC562D /* ClipboardItem.swift in Sources */,
 				04B4A4C2D164C9956DE622E2 /* ClipboardMonitor.swift in Sources */,
 				C03FB629F8CAB8735870C1DA /* ClipboardStore.swift in Sources */,
+				DC57CFBDDD3B970FAC5C4CFC /* DebugLog.swift in Sources */,
 				05C9BBD35EA42730F624A3F7 /* FontSizeScale.swift in Sources */,
 				B276724840B694F763016F37 /* HistoryRowView.swift in Sources */,
 				F94877269F023DAAC180022E /* PasteService.swift in Sources */,
