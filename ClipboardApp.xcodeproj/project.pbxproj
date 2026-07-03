@@ -18,6 +18,7 @@
 		8E2AEC889B741D2C63ACEA58 /* PopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B69DCF93ECC79B6A29B087F /* PopupView.swift */; };
 		99510D12E2BB64DFF20EA186 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D7EC2E559FEE238411EA71B /* ServiceManagement.framework */; };
 		99DF8CDCCF105898471752CE /* PinnedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D9ECEBAF2228EE4E792B5F /* PinnedStore.swift */; };
+		9D073CB966A02CEAB012F1A2 /* PasteLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5344717A51E9CCCC631465 /* PasteLog.swift */; };
 		9E15CCA7A4E228E5CDD78D48 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E618B5368D5BC474A4B4AF /* AppConstants.swift */; };
 		A1B562972CFE770FA512F662 /* SnippetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70EEA4A921F3B96734C6336B /* SnippetStore.swift */; };
 		A79489755D796F76C1FD30F7 /* AccessibilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */; };
@@ -60,6 +61,7 @@
 		B20E10270B017E1B7F4A3F3D /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
 		B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityChecker.swift; sourceTree = "<group>"; };
 		B85B0DC4571118DABBCA9162 /* ClipboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardItem.swift; sourceTree = "<group>"; };
+		BE5344717A51E9CCCC631465 /* PasteLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteLog.swift; sourceTree = "<group>"; };
 		BEF60927128611CD1A2FD953 /* PinnedRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedRowView.swift; sourceTree = "<group>"; };
 		DEA7AB57061220E6E4B1249E /* ToastWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastWindowController.swift; sourceTree = "<group>"; };
 		F01CFDC344989BDFDE50CE10 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 			children = (
 				B6CC9FF89DD6585A065D4C05 /* AccessibilityChecker.swift */,
 				95AE5BA39CEB4A30B3806BFC /* DebugLog.swift */,
+				BE5344717A51E9CCCC631465 /* PasteLog.swift */,
 				DEA7AB57061220E6E4B1249E /* ToastWindowController.swift */,
 			);
 			path = Utilities;
@@ -258,6 +261,7 @@
 				DC57CFBDDD3B970FAC5C4CFC /* DebugLog.swift in Sources */,
 				05C9BBD35EA42730F624A3F7 /* FontSizeScale.swift in Sources */,
 				B276724840B694F763016F37 /* HistoryRowView.swift in Sources */,
+				9D073CB966A02CEAB012F1A2 /* PasteLog.swift in Sources */,
 				F94877269F023DAAC180022E /* PasteService.swift in Sources */,
 				6FB9998B10E6343D1DDBBCE6 /* PinnedItem.swift in Sources */,
 				D3BA116FB47F7A8BC0F6EA2A /* PinnedRowView.swift in Sources */,

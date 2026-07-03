@@ -87,6 +87,12 @@ private struct GeneralTab: View {
 
             Divider()
 
+            Button {
+                NSWorkspace.shared.activateFileViewerSelecting([PasteLog.logFileURL])
+            } label: {
+                Label("貼り付けログを Finder で表示", systemImage: "doc.text.magnifyingglass")
+            }
+
             Button(role: .destructive) {
                 showClearConfirm = true
             } label: {

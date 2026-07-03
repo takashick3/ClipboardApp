@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import ApplicationServices
+import Carbon
 
 class PasteService {
     static let shared = PasteService()
@@ -16,15 +17,16 @@ class PasteService {
     /// このタイミングならまだ元のフィールド（パスワード欄など）にフォーカスがあるため、
     /// 正しくセキュア判定でき、要素参照も保持できる。
     func captureTarget() {
+        let app = frontmostAppDescription()
         guard let element = copyFocusedElement() else {
             capturedElement = nil
             capturedIsSecure = false
-            DebugLog.log("[Capture] フォーカス要素なし")
+            PasteLog.log("[Capture] app=\(app) フォーカス要素なし")
             return
         }
         capturedElement = element
         capturedIsSecure = isSecureTextField(element)
-        DebugLog.log("[Capture] secure=\(capturedIsSecure)")
+        PasteLog.log("[Capture] app=\(app) secure=\(capturedIsSecure)")
     }
 
     func paste(text: String, monitor: ClipboardMonitor) {
@@ -32,13 +34,18 @@ class PasteService {
         let target = capturedElement
         clearCapture()
 
+        PasteLog.log("[Paste] 開始 len=\(text.count) secure=\(wasSecure) "
+                     + "targetCaptured=\(target != nil) "
+                     + "secureEventInput=\(IsSecureEventInputEnabled()) "
+                     + "axTrusted=\(AXIsProcessTrusted())")
+
         monitor.setPasteInProgress(true)
 
         // ① セキュア欄: 捕捉済みの要素へ AX 経由で直接書き込む。
         //    キーイベントもクリップボードも使わないため、フォーカスが移っていても、
         //    Secure Event Input が有効でも書き込める（要素が許可していれば）。
         if wasSecure, let target, setValueViaAccessibility(target, text: text) {
-            DebugLog.log("[Paste] → ① AX 直接書き込み成功（捕捉済みセキュア欄）")
+            PasteLog.log("[Paste] → ① AX 直接書き込み成功（捕捉済みセキュア欄）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 monitor.setPasteInProgress(false)
             }
@@ -53,7 +60,7 @@ class PasteService {
         if wasSecure {
             // ② AX 書き込み不可のセキュア欄。⌘V を試しつつ、
             //    失敗に備えてクリップボードは復元せず手動 ⌘V 用に残す。
-            DebugLog.log("[Paste] → ② セキュア欄だが AX 不可（⌘V／失敗時は手動）")
+            PasteLog.log("[Paste] → ② セキュア欄だが AX 不可（⌘V／失敗時は手動）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -63,15 +70,22 @@ class PasteService {
             }
         } else {
             // ③ 通常フィールド: ⌘V を送り、クリップボードを元に戻す。
-            DebugLog.log("[Paste] → ③ 通常フィールド（⌘V）")
+            PasteLog.log("[Paste] → ③ 通常フィールド（⌘V）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     monitor.setPasteInProgress(false)
                     self.restoreClipboard(previousText)
+                    PasteLog.log("[Paste] 完了（クリップボード復元）")
                 }
             }
         }
+    }
+
+    /// 現在の最前面アプリを「アプリ名(bundle ID)」形式で返す。ログ用。
+    private func frontmostAppDescription() -> String {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return "不明" }
+        return "\(app.localizedName ?? "?")(\(app.bundleIdentifier ?? "?"))"
     }
 
     private func clearCapture() {
@@ -124,6 +138,10 @@ class PasteService {
     }
 
     private func sendCmdV() {
+        // 送出直前の最前面アプリを記録する。Capture 時と食い違っていれば
+        // 「フォーカス復帰が間に合っていない」ことが失敗原因だと分かる。
+        PasteLog.log("[Paste] ⌘V送出 front=\(frontmostAppDescription()) "
+                     + "secureEventInput=\(IsSecureEventInputEnabled())")
         let src = CGEventSource(stateID: .hidSystemState)
         let vKeyCode: CGKeyCode = 0x09
 
