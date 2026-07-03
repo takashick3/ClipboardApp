@@ -68,6 +68,19 @@ class PasteService {
                     ToastWindowController.shared.show(message: "貼り付かない場合は Cmd+V")
                 }
             }
+        } else if target == nil {
+            // ④ 貼り付け先が AX で見えないアプリ（Electron 等）。ポップアップが
+            //    フォーカスを奪った時点でインライン編集欄が閉じるなど、⌘V が
+            //    空振りする可能性がある。失敗に備えてクリップボードは復元せず
+            //    選択テキストを残し、手動 ⌘V でリカバリーできるようにする。
+            PasteLog.log("[Paste] → ④ capture不可（⌘V／復元なし・失敗時は手動）")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self.sendCmdV()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    monitor.setPasteInProgress(false)
+                    ToastWindowController.shared.show(message: "貼り付かない場合は Cmd+V")
+                }
+            }
         } else {
             // ③ 通常フィールド: ⌘V を送り、クリップボードを元に戻す。
             PasteLog.log("[Paste] → ③ 通常フィールド（⌘V）")
