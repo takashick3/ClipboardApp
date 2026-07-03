@@ -1,11 +1,17 @@
 import Foundation
 
-/// 貼り付け診断ログ。DebugLog と異なり常時有効で、
-/// `~/Library/Application Support/ClipboardApp/paste.log` に追記する。
+/// 貼り付け診断ログ。設定画面（一般タブ）で ON にしたときだけ
+/// `~/Library/Application Support/ClipboardApp/paste.log` に追記する（既定は OFF）。
 ///
 /// 「たまに貼り付けできない」事象を事後に解析するためのもので、
 /// 貼り付け内容そのものは記録しない（パスワード混入を避けるため文字数のみ）。
 enum PasteLog {
+    static let defaultsKey = "paste_logging"
+
+    static var isEnabled: Bool {
+        UserDefaults.standard.bool(forKey: defaultsKey)
+    }
+
     static let logFileURL: URL = {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("ClipboardApp", isDirectory: true)
@@ -27,6 +33,7 @@ enum PasteLog {
 
     static func log(_ message: String) {
         DebugLog.log(message)
+        guard isEnabled else { return }
         let line = "\(timestampFormatter.string(from: Date())) \(message)\n"
         queue.async {
             rotateIfNeeded()

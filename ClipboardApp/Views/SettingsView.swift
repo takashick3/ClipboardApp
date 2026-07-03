@@ -83,6 +83,15 @@ private struct GeneralTab: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                settingRow("貼り付け診断ログを記録") {
+                    Button(action: { settings.pasteLogging.toggle() }) {
+                        Image(systemName: settings.pasteLogging ? "checkmark.square.fill" : "square")
+                            .foregroundColor(settings.pasteLogging ? .accentColor : Color(NSColor.tertiaryLabelColor))
+                            .imageScale(.large)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             Divider()

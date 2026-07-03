@@ -39,6 +39,11 @@ class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(fontSizeScale.rawValue, forKey: Keys.fontSizeScale) }
     }
 
+    // 貼り付け診断ログ（既定 OFF。キーは PasteLog 側と共有）
+    @Published var pasteLogging: Bool {
+        didSet { UserDefaults.standard.set(pasteLogging, forKey: PasteLog.defaultsKey) }
+    }
+
     // 自動起動
     @Published private(set) var launchAtLogin: Bool = false
 
@@ -54,6 +59,8 @@ class AppSettings: ObservableObject {
 
         let storedScale = UserDefaults.standard.string(forKey: Keys.fontSizeScale)
         fontSizeScale = FontSizeScale(rawValue: storedScale ?? "") ?? .medium
+
+        pasteLogging = UserDefaults.standard.bool(forKey: PasteLog.defaultsKey)
 
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
