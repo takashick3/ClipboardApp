@@ -12,30 +12,72 @@ class PasteService {
     /// ポップアップにフォーカスが移った後でも元のフィールドへ書き込めるようにする。
     private var capturedElement: AXUIElement?
     private var capturedIsSecure = false
+    /// 貼り付け先が Spotlight など「アプリをアクティブ化せずに戻る」相手のとき true。
+    /// ポップアップ表示・終了時に自アプリ／元アプリのアクティブ化を行わず、
+    /// ⌘V が確実に届く保証もないため、クリップボードを復元せず手動 ⌘V でリカバリー可能にする。
+    private(set) var capturedKeepsFrontAppActive = false
+
+    /// 捕捉した要素を所有するプロセス。Spotlight のように「最前面アプリとは別プロセスが
+    /// 入力欄を出している」場合、NSWorkspace の frontmostApplication では検出できないため、
+    /// AX 要素の pid から求める。
+    private(set) var capturedOwnerApp: NSRunningApplication?
+
+    /// 別アプリがアクティブになると閉じてしまう入力欄の所有プロセス（bundle ID）。
+    /// macOS 26 以降の Spotlight は Siri プロセス（com.apple.campo）が入力欄を持つ。
+    private static let fragileOwnerApps: Set<String> = ["com.apple.Spotlight", "com.apple.campo"]
 
     /// ポップアップを開く「直前」に呼び出すこと。
     /// このタイミングならまだ元のフィールド（パスワード欄など）にフォーカスがあるため、
     /// 正しくセキュア判定でき、要素参照も保持できる。
-    func captureTarget() {
+    /// 戻り値は「元アプリをアクティブなままにすべきか」（`capturedKeepsFrontAppActive` と同じ）。
+    @discardableResult
+    func captureTarget() -> Bool {
+        let front = NSWorkspace.shared.frontmostApplication
         let app = frontmostAppDescription()
         guard let element = copyFocusedElement() else {
             capturedElement = nil
             capturedIsSecure = false
+            capturedOwnerApp = nil
+            capturedKeepsFrontAppActive = false
             PasteLog.log("[Capture] app=\(app) フォーカス要素なし")
-            return
+            return false
         }
         capturedElement = element
         capturedIsSecure = isSecureTextField(element)
-        PasteLog.log("[Capture] app=\(app) secure=\(capturedIsSecure)")
+
+        var pid: pid_t = 0
+        AXUIElementGetPid(element, &pid)
+        let owner = NSRunningApplication(processIdentifier: pid)
+        capturedOwnerApp = owner
+
+        // 所有プロセスが最前面アプリと異なる（Spotlight 等のフローティング入力欄）か、
+        // 既知の「アクティブ化すると閉じる」プロセスなら、元アプリをアクティブなままにする。
+        let ownerDiffers = owner != nil && front != nil && owner!.processIdentifier != front!.processIdentifier
+        let ownerIsFragile = Self.fragileOwnerApps.contains(owner?.bundleIdentifier ?? "")
+        capturedKeepsFrontAppActive = ownerDiffers || ownerIsFragile
+
+        let ownerDesc = owner.map { "\($0.localizedName ?? "?")(\($0.bundleIdentifier ?? "?"))" } ?? "pid:\(pid)"
+        PasteLog.log("[Capture] app=\(app) owner=\(ownerDesc) role=\(roleDescription(element)) "
+                     + "secure=\(capturedIsSecure) keepsFront=\(capturedKeepsFrontAppActive)")
+        return capturedKeepsFrontAppActive
+    }
+
+    private func roleDescription(_ element: AXUIElement) -> String {
+        var role: CFTypeRef?
+        var subrole: CFTypeRef?
+        AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &role)
+        AXUIElementCopyAttributeValue(element, kAXSubroleAttribute as CFString, &subrole)
+        return "\(role as? String ?? "?")/\(subrole as? String ?? "-")"
     }
 
     func paste(text: String, monitor: ClipboardMonitor) {
         let wasSecure = capturedIsSecure
         let target = capturedElement
+        let keepsFront = capturedKeepsFrontAppActive
         clearCapture()
 
         PasteLog.log("[Paste] 開始 len=\(text.count) secure=\(wasSecure) "
-                     + "targetCaptured=\(target != nil) "
+                     + "targetCaptured=\(target != nil) keepsFront=\(keepsFront) "
                      + "secureEventInput=\(IsSecureEventInputEnabled()) "
                      + "axTrusted=\(AXIsProcessTrusted())")
 
@@ -68,12 +110,12 @@ class PasteService {
                     ToastWindowController.shared.show(message: "貼り付かない場合は Cmd+V")
                 }
             }
-        } else if target == nil {
-            // ④ 貼り付け先が AX で見えないアプリ（Electron 等）。ポップアップが
-            //    フォーカスを奪った時点でインライン編集欄が閉じるなど、⌘V が
-            //    空振りする可能性がある。失敗に備えてクリップボードは復元せず
-            //    選択テキストを残し、手動 ⌘V でリカバリーできるようにする。
-            PasteLog.log("[Paste] → ④ capture不可（⌘V／復元なし・失敗時は手動）")
+        } else if target == nil || keepsFront {
+            // ④ 貼り付け先が AX で見えないアプリ（Electron 等）、または Spotlight のように
+            //    アプリをアクティブ化せずに戻る相手。ポップアップがフォーカスを奪った時点で
+            //    入力欄が閉じるなど、⌘V が空振りする可能性がある。失敗に備えて
+            //    クリップボードは復元せず選択テキストを残し、手動 ⌘V でリカバリーできるようにする。
+            PasteLog.log("[Paste] → ④ capture不可または keepsFront（⌘V／復元なし・失敗時は手動）")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self.sendCmdV()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -104,6 +146,8 @@ class PasteService {
     private func clearCapture() {
         capturedElement = nil
         capturedIsSecure = false
+        capturedOwnerApp = nil
+        capturedKeepsFrontAppActive = false
     }
 
     private func restoreClipboard(_ previousText: String?) {

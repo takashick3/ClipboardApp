@@ -15,6 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var localEventMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
+    /// Spotlight など「別アプリがアクティブになると閉じてしまう」入力欄が貼り付け先のとき true。
+    /// ポップアップ表示・終了時に自アプリ／元アプリのアクティブ化を行わず、
+    /// 非アクティブ化パネルのままキー入力だけを受ける（判定は PasteService.captureTarget）。
+    private var keepsPreviousAppActive = false
     private var popupState = PopupStateModel()
     private var tabChangeCancellable: AnyCancellable?
 
@@ -179,8 +183,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showPopup(tab: PopupTab) {
         previousApp = NSWorkspace.shared.frontmostApplication
-        // フォーカスを奪う前に貼り付け先（パスワード欄など）を捕捉しておく
-        PasteService.shared.captureTarget()
+        // フォーカスを奪う前に貼り付け先（パスワード欄など）を捕捉しておく。
+        // Spotlight は frontmostApplication に現れない（元アプリが最前面のまま）ため、
+        // フォーカス要素の所有プロセスから「アクティブ化してよいか」を判定する。
+        keepsPreviousAppActive = PasteService.shared.captureTarget()
         popupState.activeTab = tab
         popupState.selectedIndex = 0
         popupState.selectedSnippetFolder = nil
@@ -221,7 +227,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.setContentSize(hosting.view.fittingSize)
         positionWindow(window)
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        // Spotlight が最前面のときはアプリをアクティブ化しない（Spotlight が閉じるため）。
+        // .nonactivatingPanel + canBecomeKey なのでアクティブ化なしでもキー入力は受けられる。
+        if !keepsPreviousAppActive {
+            NSApp.activate(ignoringOtherApps: true)
+        }
 
         popupWindow = window
         setupLocalEventMonitor(clipboardStore: clipboardStore, snippetStore: snippetStore)
@@ -241,8 +251,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(m)
             globalClickMonitor = nil
         }
-        previousApp?.activate(options: .activateIgnoringOtherApps)
+        // 元アプリをアクティブ化しなかった場合はそのまま（パネルが閉じればキーは元に戻る）
+        if !keepsPreviousAppActive {
+            previousApp?.activate(options: .activateIgnoringOtherApps)
+        }
         previousApp = nil
+        keepsPreviousAppActive = false
     }
 
     private func setupTabChangeObserver(window: NSWindow, hosting: NSHostingController<PopupView>) {
