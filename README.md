@@ -1,5 +1,7 @@
 # ClipboardApp
 
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github)](https://github.com/sponsors/takashick3)
+
 macOS 用の軽量クリップボード履歴管理アプリです。
 
 ## 機能
@@ -59,6 +61,10 @@ macOS 用の軽量クリップボード履歴管理アプリです。
 > **Note**  
 > アクセシビリティ権限の再許可が必要なのは、現在のビルドが開発者署名なし（ad-hoc 署名）のため、  
 > バージョンが変わると macOS が別のアプリと判断するためです。
+
+## スポンサー
+
+このアプリが役に立ったら、[GitHub Sponsors](https://github.com/sponsors/takashick3) で開発を支援していただけると励みになります。
 
 ## ライセンス
 
